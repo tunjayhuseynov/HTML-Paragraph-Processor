@@ -1,5 +1,6 @@
-interface IHTMLParagraphResult {
-    hookParagraph: string | undefined,
+
+export interface IHTMLParagraphResult {
+    hookParagraph?: string | undefined,
     paragraphs: {
         [id: string]: {
             title: string
@@ -16,12 +17,18 @@ interface IHeader {
     onlyTextPattern: RegExp
 }
 
-interface IHTMLParagraphProcessor {
+export interface IHTMLParagraphProcessor {
     regex: {
         h3: IHeader, h2: IHeader
     }
-    parseParagraphs: (tagKey: keyof IHTMLParagraphProcessor["regex"], html: string) => IHTMLParagraphResult
+    parseParagraphs: (tagKey: keyof IHTMLParagraphProcessor["regex"], html: string) => IHTMLParagraphResult,
+    generateHTMLfromParagraphs: (obj: IHTMLParagraphResult) => {
+        content: string;
+        keyTitleArray: IKeyTitleArrayItem[];
+    }
 }
+
+export interface IKeyTitleArrayItem { key: string, title: string, children?: IKeyTitleArrayItem[] }
 
 export default class HTMLParagraphProcessor implements IHTMLParagraphProcessor {
     regex = {
@@ -38,26 +45,37 @@ export default class HTMLParagraphProcessor implements IHTMLParagraphProcessor {
     } as const
 
     generateHTMLfromParagraphs(obj: IHTMLParagraphResult) {
-        return obj.hookParagraph += this.combineContent(obj.paragraphs)
+        const keyTitleArray: IKeyTitleArrayItem[] = []
+        const content = obj.hookParagraph += this.combineContent(obj.paragraphs, keyTitleArray)
+        return {
+            content,
+            keyTitleArray
+        }
     }
 
-    private combineContent(paragraphs: IHTMLParagraphResult["paragraphs"]): string {
+    private combineContent(paragraphs: IHTMLParagraphResult["paragraphs"], keyTitleArrSource: IKeyTitleArrayItem[]): string {
         let combinedContent: string = "";
 
-        function traverseParagraphs(currentParagraph: IHTMLParagraphResult["paragraphs"][number] | undefined) {
+        function traverseParagraphs(currentParagraph: IHTMLParagraphResult["paragraphs"][number] | undefined, key: string, keyTitleArr: IKeyTitleArrayItem[] | undefined) {
             if (currentParagraph) {
-                combinedContent += currentParagraph.content
+                combinedContent += `<div class="${key}">${currentParagraph.content}</div>`
+                const newArrItem = {
+                    key,
+                    title: currentParagraph.title,
+                    children: !!currentParagraph.paragraphs ? [] as IKeyTitleArrayItem[] : undefined
+                }
+                keyTitleArr?.push(newArrItem)
 
                 if (currentParagraph.paragraphs) {
-                    for (const childParagraph of Object.values(currentParagraph.paragraphs)) {
-                        traverseParagraphs(childParagraph);
+                    for (const [key, childParagraph] of Object.entries(currentParagraph.paragraphs)) {
+                        traverseParagraphs(childParagraph, key, newArrItem.children);
                     }
                 }
             }
         }
 
-        for (const paragraph of Object.values(paragraphs)) {
-            traverseParagraphs(paragraph);
+        for (const [key, paragraph] of Object.entries(paragraphs)) {
+            traverseParagraphs(paragraph, key, keyTitleArrSource);
         }
 
         return combinedContent;
