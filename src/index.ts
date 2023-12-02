@@ -4,7 +4,7 @@ interface IHTMLParagraphResult {
         [id: string]: {
             title: string
             content: string,
-            paragraphs?: IHTMLParagraphResult
+            paragraphs?: IHTMLParagraphResult['paragraphs']
         }
     },
     paragraphTitles: string[],
@@ -49,7 +49,7 @@ export default class HTMLParagraphProcessor implements IHTMLParagraphProcessor {
                 combinedContent += currentParagraph.content
 
                 if (currentParagraph.paragraphs) {
-                    for (const childParagraph of Object.values(currentParagraph.paragraphs.paragraphs)) {
+                    for (const childParagraph of Object.values(currentParagraph.paragraphs)) {
                         traverseParagraphs(childParagraph);
                     }
                 }
@@ -93,7 +93,7 @@ export default class HTMLParagraphProcessor implements IHTMLParagraphProcessor {
             return {
                 title: [...content.matchAll(this.regex[tagKey].onlyTextPattern)].map(s => s[1]).join(",") ?? "",
                 content,
-                paragraphs: child
+                paragraphs: child?.paragraphs
             }
         }) as IHTMLParagraphResult["paragraphs"][string][]
 
