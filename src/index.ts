@@ -5,7 +5,8 @@ export interface IHTMLParagraphResult {
         [id: string]: {
             title: string
             content: string,
-            paragraphs?: IHTMLParagraphResult['paragraphs']
+            paragraphs?: IHTMLParagraphResult['paragraphs'],
+            key: string
         }
     },
     paragraphTitles: string[],
@@ -111,7 +112,8 @@ export default class HTMLParagraphProcessor implements IHTMLParagraphProcessor {
             return {
                 title: [...content.matchAll(this.regex[tagKey].onlyTextPattern)].map(s => s[1]).join(",") ?? "",
                 content,
-                paragraphs: child?.paragraphs
+                paragraphs: child?.paragraphs,
+                key: ""
             }
         }) as IHTMLParagraphResult["paragraphs"][string][]
 

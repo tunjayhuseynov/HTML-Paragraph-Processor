@@ -1,6 +1,6 @@
 {
   "name": "html-paragraph-processor",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "description": "This package is for processing rich text base HTML string in order to chunk into paragraphs",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
