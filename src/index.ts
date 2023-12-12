@@ -31,6 +31,11 @@ export interface IHTMLParagraphProcessor {
 
 export interface IKeyTitleArrayItem { key: string, title: string, children?: IKeyTitleArrayItem[] }
 
+export interface IGenerateHTMLfromParagraphs {
+    content: string;
+    keyTitleArray: IKeyTitleArrayItem[];
+}
+
 export default class HTMLParagraphProcessor implements IHTMLParagraphProcessor {
     regex = {
         h3: {
@@ -45,21 +50,21 @@ export default class HTMLParagraphProcessor implements IHTMLParagraphProcessor {
         }
     } as const
 
-    generateHTMLfromParagraphs(obj: IHTMLParagraphResult) {
+    generateHTMLfromParagraphs(obj: Pick<IHTMLParagraphResult, "paragraphs" | "hookParagraph">, disableDivWrapper?: boolean): IGenerateHTMLfromParagraphs {
         const keyTitleArray: IKeyTitleArrayItem[] = []
-        const content = obj.hookParagraph += this.combineContent(obj.paragraphs, keyTitleArray)
+        const content = obj.hookParagraph += this.combineContent(obj.paragraphs, keyTitleArray, disableDivWrapper)
         return {
             content,
             keyTitleArray
         }
     }
 
-    private combineContent(paragraphs: IHTMLParagraphResult["paragraphs"], keyTitleArrSource: IKeyTitleArrayItem[]): string {
+    private combineContent(paragraphs: IHTMLParagraphResult["paragraphs"], keyTitleArrSource: IKeyTitleArrayItem[], disableDivWrapper?: boolean): string {
         let combinedContent: string = "";
 
         function traverseParagraphs(currentParagraph: IHTMLParagraphResult["paragraphs"][number] | undefined, key: string, keyTitleArr: IKeyTitleArrayItem[] | undefined) {
             if (currentParagraph) {
-                combinedContent += `<div class="${key}">${currentParagraph.content}</div>`
+                combinedContent += (disableDivWrapper ? currentParagraph.content : `<div class="${key}">${currentParagraph.content}</div>`)
                 const newArrItem = {
                     key,
                     title: currentParagraph.title,
